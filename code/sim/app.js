@@ -4,7 +4,7 @@ const CONFIG = {
     INITIAL_BTC_MAX: 0.5,
     TRANSACTION_PERCENTAGE: 0.3,
     TRANSACTION_MIN: 0.01,
-    TRANSACTION_MAX: 0.05,
+    TRANSACTION_MAX: 0.06,  // Maximum transaction amount in BTC
     MAX_LOG_ENTRIES: 20,
     ENTITY_RADIUS: 20
 };
@@ -167,7 +167,7 @@ class Simulator {
             to = this.entities[Math.floor(Math.random() * this.entities.length)];
         } while (to === from);
 
-        const amount = Math.min(from.btc * CONFIG.TRANSACTION_PERCENTAGE, CONFIG.TRANSACTION_MIN + Math.random() * CONFIG.TRANSACTION_MAX);
+        const amount = Math.min(from.btc * CONFIG.TRANSACTION_PERCENTAGE, CONFIG.TRANSACTION_MIN + Math.random() * (CONFIG.TRANSACTION_MAX - CONFIG.TRANSACTION_MIN));
         
         if (from.btc >= amount) {
             from.btc -= amount;
