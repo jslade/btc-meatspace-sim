@@ -1,8 +1,14 @@
-"""API resources for Bitcoin Blockchain Simulator."""
+"""Resource controllers for API endpoints."""
 import json
-from datetime import datetime
 from app.database import SessionLocal
-from app.models import Settings, Peer, Message, Wallet, Transaction, MinedTxn, PendingTxn, Block
+from app.services import (
+    SettingsService,
+    PeerService,
+    MessageService,
+    WalletService,
+    TransactionService,
+    BlockService
+)
 
 
 class SettingsResource:
@@ -12,14 +18,7 @@ class SettingsResource:
         """Get settings."""
         db = SessionLocal()
         try:
-            settings = db.query(Settings).first()
-            if not settings:
-                # Create default settings
-                settings = Settings(block_reward=50, difficulty_target=4)
-                db.add(settings)
-                db.commit()
-                db.refresh(settings)
-            
+            settings = SettingsService.get_or_create_settings(db)
             resp.text = json.dumps({
                 'block_reward': settings.block_reward,
                 'difficulty_target': settings.difficulty_target
@@ -32,19 +31,8 @@ class SettingsResource:
         """Update settings."""
         db = SessionLocal()
         try:
-            settings = db.query(Settings).first()
-            if not settings:
-                settings = Settings()
-                db.add(settings)
-            
             data = json.loads(req.bounded_stream.read())
-            if 'block_reward' in data:
-                settings.block_reward = data['block_reward']
-            if 'difficulty_target' in data:
-                settings.difficulty_target = data['difficulty_target']
-            
-            db.commit()
-            db.refresh(settings)
+            settings = SettingsService.update_settings(db, data)
             
             resp.text = json.dumps({
                 'block_reward': settings.block_reward,
@@ -62,7 +50,7 @@ class PeerResource:
         """Get all peers."""
         db = SessionLocal()
         try:
-            peers = db.query(Peer).all()
+            peers = PeerService.get_all_peers(db)
             resp.text = json.dumps([{
                 'id': p.id,
                 'name': p.name,
@@ -77,10 +65,7 @@ class PeerResource:
         db = SessionLocal()
         try:
             data = json.loads(req.bounded_stream.read())
-            peer = Peer(name=data['name'])
-            db.add(peer)
-            db.commit()
-            db.refresh(peer)
+            peer = PeerService.create_peer(db, data['name'])
             
             resp.text = json.dumps({
                 'id': peer.id,
@@ -99,7 +84,7 @@ class MessageResource:
         """Get all messages."""
         db = SessionLocal()
         try:
-            messages = db.query(Message).order_by(Message.timestamp).all()
+            messages = MessageService.get_all_messages(db)
             resp.text = json.dumps([{
                 'id': m.id,
                 'peer_id': m.peer_id,
@@ -117,15 +102,13 @@ class MessageResource:
         db = SessionLocal()
         try:
             data = json.loads(req.bounded_stream.read())
-            message = Message(
-                peer_id=data['peer_id'],
-                content=data['content'],
-                read=data.get('read', False),
-                processed=data.get('processed', False)
+            message = MessageService.create_message(
+                db,
+                data['peer_id'],
+                data['content'],
+                data.get('read', False),
+                data.get('processed', False)
             )
-            db.add(message)
-            db.commit()
-            db.refresh(message)
             
             resp.text = json.dumps({
                 'id': message.id,
@@ -147,7 +130,7 @@ class WalletResource:
         """Get all wallets."""
         db = SessionLocal()
         try:
-            wallets = db.query(Wallet).all()
+            wallets = WalletService.get_all_wallets(db)
             resp.text = json.dumps([{
                 'id': w.id,
                 'name': w.name,
@@ -163,15 +146,13 @@ class WalletResource:
         db = SessionLocal()
         try:
             data = json.loads(req.bounded_stream.read())
-            wallet = Wallet(
-                name=data['name'],
-                salt=data['salt'],
-                secret=data['secret'],
-                pubkey=data['pubkey']
+            wallet = WalletService.create_wallet(
+                db,
+                data['name'],
+                data['salt'],
+                data['secret'],
+                data['pubkey']
             )
-            db.add(wallet)
-            db.commit()
-            db.refresh(wallet)
             
             resp.text = json.dumps({
                 'id': wallet.id,
@@ -191,7 +172,7 @@ class TransactionResource:
         """Get all transactions."""
         db = SessionLocal()
         try:
-            transactions = db.query(Transaction).all()
+            transactions = TransactionService.get_all_transactions(db)
             resp.text = json.dumps([{
                 'id': t.id,
                 'peer_id': t.peer_id,
@@ -213,28 +194,7 @@ class TransactionResource:
         db = SessionLocal()
         try:
             data = json.loads(req.bounded_stream.read())
-            transaction = Transaction(
-                peer_id=data.get('peer_id'),
-                name=data.get('name'),
-                amount=data.get('amount'),
-                input_txn_id_1=data.get('input_txn_id_1'),
-                input_txn_sig_1=data.get('input_txn_sig_1'),
-                input_txn_id_2=data.get('input_txn_id_2'),
-                input_txn_sig_2=data.get('input_txn_sig_2'),
-                output_amount_1=data.get('output_amount_1'),
-                output_pk_1=data.get('output_pk_1'),
-                output_amount_2=data.get('output_amount_2'),
-                output_pk_2=data.get('output_pk_2'),
-                output_amount_3=data.get('output_amount_3'),
-                output_pk_3=data.get('output_pk_3'),
-                output_amount_4=data.get('output_amount_4'),
-                output_pk_4=data.get('output_pk_4'),
-                output_amount_5=data.get('output_amount_5'),
-                output_pk_5=data.get('output_pk_5')
-            )
-            db.add(transaction)
-            db.commit()
-            db.refresh(transaction)
+            transaction = TransactionService.create_transaction(db, data)
             
             resp.text = json.dumps({'id': transaction.id})
             resp.status = '201 Created'
@@ -249,7 +209,7 @@ class BlockResource:
         """Get all blocks."""
         db = SessionLocal()
         try:
-            blocks = db.query(Block).order_by(Block.timestamp).all()
+            blocks = BlockService.get_all_blocks(db)
             resp.text = json.dumps([{
                 'id': b.id,
                 'peer_id': b.peer_id,
@@ -268,16 +228,7 @@ class BlockResource:
         db = SessionLocal()
         try:
             data = json.loads(req.bounded_stream.read())
-            block = Block(
-                peer_id=data.get('peer_id'),
-                commitment=data.get('commitment'),
-                target=data.get('target'),
-                nonce=data.get('nonce'),
-                hash=data.get('hash')
-            )
-            db.add(block)
-            db.commit()
-            db.refresh(block)
+            block = BlockService.create_block(db, data)
             
             resp.text = json.dumps({
                 'id': block.id,

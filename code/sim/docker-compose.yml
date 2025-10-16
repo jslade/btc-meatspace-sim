@@ -9,7 +9,8 @@ services:
     environment:
       - DATABASE_URL=sqlite:///./btc_sim.db
     volumes:
-      - backend-data:/app
+      - ./backend/app:/app/app:ro  # Mount source for development auto-reload
+      - backend-data:/app/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -22,6 +23,8 @@ services:
     container_name: btc-sim-web
     ports:
       - "80:80"
+    volumes:
+      - ./web/src:/app/src:ro  # Mount source for development auto-reload
     depends_on:
       - backend
     restart: unless-stopped

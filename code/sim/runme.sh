@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Bitcoin Meatspace Simulator - Raspberry Pi Deployment Script
-# This script automates the deployment process on Raspberry Pi
+# Bitcoin Blockchain Simulator - Deployment Script
+# This script automates the deployment process
 
 set -e
 
-echo "====================================="
-echo "BTC Meatspace Simulator - Pi Deploy"
-echo "====================================="
+echo "========================================="
+echo "BTC Blockchain Simulator - Deployment"
+echo "========================================="
 echo ""
 
 # Colors for output
@@ -15,16 +15,6 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
-
-# Check if running on Raspberry Pi
-if ! grep -q "Raspberry Pi" /proc/cpuinfo 2>/dev/null; then
-    echo -e "${YELLOW}Warning: This doesn't appear to be a Raspberry Pi${NC}"
-    read -p "Continue anyway? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
-    fi
-fi
 
 # Check if Docker is installed
 if ! command -v docker &> /dev/null; then

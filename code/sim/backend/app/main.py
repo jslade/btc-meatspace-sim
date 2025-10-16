@@ -2,7 +2,7 @@
 import falcon
 from falcon_cors import CORS
 from app.database import init_db
-from app.resources_new import (
+from app.resources import (
     SettingsResource,
     PeerResource,
     MessageResource,
@@ -10,6 +10,7 @@ from app.resources_new import (
     TransactionResource,
     BlockResource
 )
+from app.resources.health import HealthResource
 
 # Initialize database
 init_db()
@@ -27,6 +28,7 @@ message_resource = MessageResource()
 wallet_resource = WalletResource()
 transaction_resource = TransactionResource()
 block_resource = BlockResource()
+health_resource = HealthResource()
 
 app.add_route('/api/settings', settings_resource)
 app.add_route('/api/peers', peer_resource)
@@ -34,13 +36,4 @@ app.add_route('/api/messages', message_resource)
 app.add_route('/api/wallets', wallet_resource)
 app.add_route('/api/transactions', transaction_resource)
 app.add_route('/api/blocks', block_resource)
-
-
-# Health check
-class HealthResource:
-    def on_get(self, req, resp):
-        resp.text = '{"status": "ok"}'
-        resp.status = falcon.HTTP_200
-
-
-app.add_route('/health', HealthResource())
+app.add_route('/health', health_resource)
