@@ -6,7 +6,10 @@ from app.resources import (
     EntityResource,
     EntityDetailResource,
     TransactionResource,
-    StatsResource
+    StatsResource,
+    NodeResource,
+    MessageResource,
+    MessageDetailResource
 )
 
 # Initialize database
@@ -18,7 +21,7 @@ cors = CORS(allow_all_origins=True, allow_all_methods=True, allow_all_headers=Tr
 # Create Falcon app
 app = falcon.App(middleware=[cors.middleware])
 
-# Routes
+# Legacy routes (backward compatibility)
 entity_resource = EntityResource()
 entity_detail_resource = EntityDetailResource()
 transaction_resource = TransactionResource()
@@ -28,6 +31,15 @@ app.add_route('/api/entities', entity_resource)
 app.add_route('/api/entities/{entity_id}', entity_detail_resource)
 app.add_route('/api/transactions', transaction_resource)
 app.add_route('/api/stats', stats_resource)
+
+# New routes for network node functionality
+node_resource = NodeResource()
+message_resource = MessageResource()
+message_detail_resource = MessageDetailResource()
+
+app.add_route('/api/nodes', node_resource)
+app.add_route('/api/messages', message_resource)
+app.add_route('/api/messages/{message_id}', message_detail_resource)
 
 
 # Health check
