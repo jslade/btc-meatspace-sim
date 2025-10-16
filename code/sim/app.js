@@ -1,11 +1,21 @@
 // Bitcoin Meatspace Simulator
+// Configuration constants
+const CONFIG = {
+    INITIAL_BTC_MAX: 0.5,
+    TRANSACTION_PERCENTAGE: 0.3,
+    TRANSACTION_MIN: 0.01,
+    TRANSACTION_MAX: 0.05,
+    MAX_LOG_ENTRIES: 20,
+    ENTITY_RADIUS: 20
+};
+
 class Entity {
     constructor(x, y, type) {
         this.x = x;
         this.y = y;
         this.type = type; // 'person' or 'merchant'
-        this.btc = Math.random() * 0.5;
-        this.id = Math.random().toString(36).substr(2, 9);
+        this.btc = Math.random() * CONFIG.INITIAL_BTC_MAX;
+        this.id = Math.random().toString(36).substring(2, 11);
         this.selected = false;
         this.vx = 0;
         this.vy = 0;
@@ -22,7 +32,7 @@ class Entity {
 
         // Draw entity circle
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 20, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, CONFIG.ENTITY_RADIUS, 0, Math.PI * 2);
         ctx.fillStyle = this.type === 'person' ? '#3b82f6' : '#10b981';
         ctx.fill();
 
@@ -54,13 +64,13 @@ class Entity {
         this.y += this.vy;
 
         // Bounce off walls
-        if (this.x < 20 || this.x > width - 20) {
+        if (this.x < CONFIG.ENTITY_RADIUS || this.x > width - CONFIG.ENTITY_RADIUS) {
             this.vx *= -1;
-            this.x = Math.max(20, Math.min(width - 20, this.x));
+            this.x = Math.max(CONFIG.ENTITY_RADIUS, Math.min(width - CONFIG.ENTITY_RADIUS, this.x));
         }
-        if (this.y < 20 || this.y > height - 20) {
+        if (this.y < CONFIG.ENTITY_RADIUS || this.y > height - CONFIG.ENTITY_RADIUS) {
             this.vy *= -1;
-            this.y = Math.max(20, Math.min(height - 20, this.y));
+            this.y = Math.max(CONFIG.ENTITY_RADIUS, Math.min(height - CONFIG.ENTITY_RADIUS, this.y));
         }
 
         // Friction
@@ -71,7 +81,7 @@ class Entity {
     isClicked(mx, my) {
         const dx = this.x - mx;
         const dy = this.y - my;
-        return Math.sqrt(dx * dx + dy * dy) < 20;
+        return Math.sqrt(dx * dx + dy * dy) < CONFIG.ENTITY_RADIUS;
     }
 }
 
@@ -157,7 +167,7 @@ class Simulator {
             to = this.entities[Math.floor(Math.random() * this.entities.length)];
         } while (to === from);
 
-        const amount = Math.min(from.btc * 0.3, 0.01 + Math.random() * 0.05);
+        const amount = Math.min(from.btc * CONFIG.TRANSACTION_PERCENTAGE, CONFIG.TRANSACTION_MIN + Math.random() * CONFIG.TRANSACTION_MAX);
         
         if (from.btc >= amount) {
             from.btc -= amount;
@@ -267,8 +277,8 @@ class Simulator {
         
         logEntries.insertBefore(entry, logEntries.firstChild);
 
-        // Keep only last 20 entries
-        while (logEntries.children.length > 20) {
+        // Keep only last N entries
+        while (logEntries.children.length > CONFIG.MAX_LOG_ENTRIES) {
             logEntries.removeChild(logEntries.lastChild);
         }
     }
